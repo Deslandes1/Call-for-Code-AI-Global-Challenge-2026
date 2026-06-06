@@ -7,6 +7,14 @@ import pandas as pd
 from datetime import datetime
 from groq import Groq
 
+# ================== VIDEO URLs per language ==================
+# Replace these with your actual Dropbox video links (use dl=1)
+VIDEO_URLS = {
+    "English": "https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=1",
+    "Français": "https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=1",  # Replace with French version
+    "Español": "https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=1",   # Replace with Spanish version
+}
+
 # ================== Page Config ==================
 st.set_page_config(
     page_title="SafeHaven | Anti-Trafficking AI",
@@ -212,11 +220,9 @@ else:
 
 tab1, tab2, tab3, tab4 = st.tabs(tab_titles)
 
-# ---------- Tab 1: Video Introduction (with correct Dropbox dl=1 link) ----------
-# Fixed video URL: changed dl=0 to dl=1
-video_link = "https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=1"
-
+# ---------- Tab 1: Video Introduction (language‑specific) ----------
 with tab1:
+    video_link = VIDEO_URLS.get(language, VIDEO_URLS["English"])
     if language == "English":
         st.markdown("### 🎬 Watch the full introduction video")
         st.markdown("This video explains all features of SafeHaven: how to assess risk, submit anonymous reports, and access resources.")
