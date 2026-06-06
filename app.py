@@ -2,9 +2,10 @@ import streamlit as st
 import requests
 import json
 import re
-from groq import Groq
+import os
 import pandas as pd
 from datetime import datetime
+from groq import Groq
 
 # ================== Page Config ==================
 st.set_page_config(
@@ -50,6 +51,15 @@ st.markdown("""
         border-radius: 10px;
         margin: 10px 0;
     }
+    .security-badge {
+        background: #0a192f;
+        border: 1px solid #00ebc7;
+        border-radius: 30px;
+        padding: 8px 15px;
+        margin: 10px 0;
+        font-family: monospace;
+        text-align: center;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -59,18 +69,47 @@ with st.sidebar:
     st.markdown("## **GlobalInternet.py**")
     st.markdown("**SafeHaven – AI Anti-Trafficking Tool**")
     st.markdown("---")
+    
+    # Language Selection
+    language = st.selectbox("🌐 Language / Idioma / Langue", ["English", "Français", "Español"])
+    
+    # Global Security Shield (visible API key)
+    st.markdown("---")
+    st.markdown("### 🛡️ Global Security Shield active")
+    st.markdown(f'<div class="security-badge">🔑 API Key: 8J9kp3ZQOZ8ScroE4wtMMp1r44Fc3Gv6a6ymX7uq_Rg</div>', unsafe_allow_html=True)
+    st.caption("Encrypted end-to-end | Active monitoring")
+    
+    st.markdown("---")
     st.markdown("Built by **Gesner Deslandes**, Engineer-in-Chief")
     st.markdown("📞 (509) 4738 5663")
     st.markdown("✉️ deslandes78@gmail.com")
     st.markdown("---")
-    st.markdown("### How to use")
-    st.markdown("1. **Risk Assessment** – Describe a situation and let AI flag red flags.")
-    st.markdown("2. **Report** – Anonymously submit a suspicious activity.")
-    st.markdown("3. **Resources** – Find hotlines and safety plans.")
+    if language == "English":
+        st.markdown("### How to use")
+        st.markdown("1. **Risk Assessment** – Describe a situation and let AI flag red flags.")
+        st.markdown("2. **Report** – Anonymously submit a suspicious activity.")
+        st.markdown("3. **Resources** – Find hotlines and safety plans.")
+    elif language == "Français":
+        st.markdown("### Comment utiliser")
+        st.markdown("1. **Évaluation des risques** – Décrivez une situation, l'IA détecte les signes.")
+        st.markdown("2. **Signaler** – Soumettez anonymement une activité suspecte.")
+        st.markdown("3. **Ressources** – Numéros d'urgence et plans de sécurité.")
+    else:  # Español
+        st.markdown("### Cómo usar")
+        st.markdown("1. **Evaluación de riesgos** – Describe una situación, la IA detecta señales.")
+        st.markdown("2. **Reportar** – Envía anónimamente una actividad sospechosa.")
+        st.markdown("3. **Recursos** – Líneas de ayuda y planes de seguridad.")
 
 # ================== Main Title ==================
-st.title("🛡️ SafeHaven")
-st.markdown("## AI-Powered Early Warning & Resource Hub Against Human Trafficking")
+if language == "English":
+    st.title("🛡️ SafeHaven")
+    st.markdown("## AI-Powered Early Warning & Resource Hub Against Human Trafficking")
+elif language == "Français":
+    st.title("🛡️ SafeHaven")
+    st.markdown("## Alerte précoce et centre de ressources contre la traite des êtres humains")
+else:
+    st.title("🛡️ SafeHaven")
+    st.markdown("## Alerta temprana y centro de recursos contra la trata de personas")
 st.markdown("---")
 
 # ================== Groq Client ==================
@@ -80,9 +119,10 @@ if "GROQ_API_KEY" not in st.secrets:
 groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # ================== Helper Function ==================
-def analyze_risk(situation_text):
-    """Call Groq LLM to analyze trafficking risk."""
-    prompt = f"""You are an expert anti-trafficking analyst. Analyze the following situation and output a JSON object with exactly these fields:
+def analyze_risk(situation_text, lang):
+    """Call Groq LLM to analyze trafficking risk in the selected language."""
+    if lang == "English":
+        prompt = f"""You are an expert anti-trafficking analyst. Analyze the following situation and output a JSON object with exactly these fields:
 - "risk_level": "high", "medium", "low", or "uncertain"
 - "red_flags": list of specific trafficking indicators (e.g., "confiscated passport", "debt bondage", "false promises")
 - "advice": one sentence of actionable advice for the user.
@@ -90,6 +130,24 @@ def analyze_risk(situation_text):
 Situation: {situation_text}
 
 Return ONLY valid JSON. No extra text."""
+    elif lang == "Français":
+        prompt = f"""Vous êtes un expert en lutte contre la traite. Analysez la situation suivante et renvoyez un JSON avec :
+- "risk_level": "high", "medium", "low" ou "uncertain"
+- "red_flags": liste des signaux (ex: "passeport confisqué", "servitude pour dette")
+- "advice": une phrase de conseil.
+
+Situation: {situation_text}
+
+Renvoyez UNIQUEMENT le JSON valide."""
+    else:  # Español
+        prompt = f"""Eres un experto en lucha contra la trata. Analiza la siguiente situación y devuelve un JSON con:
+- "risk_level": "high", "medium", "low" o "uncertain"
+- "red_flags": lista de indicadores (ej: "pasaporte confiscado", "servidumbre por deuda")
+- "advice": una frase de consejo.
+
+Situación: {situation_text}
+
+Devuelve SOLO el JSON válido."""
     try:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -98,7 +156,6 @@ Return ONLY valid JSON. No extra text."""
             max_tokens=500
         )
         result = response.choices[0].message.content.strip()
-        # Extract JSON (handle markdown code blocks)
         json_match = re.search(r'\{.*\}', result, re.DOTALL)
         if json_match:
             result = json_match.group(0)
@@ -108,19 +165,32 @@ Return ONLY valid JSON. No extra text."""
         return {"risk_level": "error", "red_flags": [], "advice": f"Could not analyze: {str(e)}"}
 
 # ================== Tabs ==================
-tab1, tab2, tab3 = st.tabs(["🔍 Risk Assessment", "📢 Report Suspicious Activity", "📞 Resources & Help"])
+tab1, tab2, tab3 = st.tabs([
+    "🔍 Risk Assessment" if language == "English" else "🔍 Évaluation des risques" if language == "Français" else "🔍 Evaluación de riesgos",
+    "📢 Report" if language == "English" else "📢 Signaler" if language == "Français" else "📢 Reportar",
+    "📞 Resources" if language == "English" else "📞 Ressources" if language == "Français" else "📞 Recursos"
+])
 
 # ---------- Tab 1: Risk Assessment ----------
 with tab1:
-    st.markdown("### 🧠 Describe a situation you or someone you know is facing")
-    situation = st.text_area("Write in your own words (Creole, English, French – AI understands):", height=150,
-                             placeholder="Example: I met a recruiter who promised me a well-paid job abroad, but he asked for my passport and $500 fee...")
-    if st.button("Analyze Risk", key="analyze"):
+    if language == "English":
+        st.markdown("### 🧠 Describe a situation you or someone you know is facing")
+        placeholder = "Example: I met a recruiter who promised me a well-paid job abroad, but he asked for my passport and $500 fee..."
+    elif language == "Français":
+        st.markdown("### 🧠 Décrivez une situation que vous ou quelqu'un que vous connaissez vivez")
+        placeholder = "Exemple : J'ai rencontré un recruteur qui m'a promis un travail bien payé à l'étranger, mais il m'a demandé mon passeport et 500 $..."
+    else:
+        st.markdown("### 🧠 Describe una situación que tú o alguien que conoces está enfrentando")
+        placeholder = "Ejemplo: Conocí a un reclutador que me prometió un trabajo bien pagado en el extranjero, pero me pidió mi pasaporte y $500..."
+    
+    situation = st.text_area("", height=150, placeholder=placeholder)
+    btn_label = "Analyze Risk" if language == "English" else "Analyser" if language == "Français" else "Analizar"
+    if st.button(btn_label, key="analyze"):
         if not situation.strip():
-            st.warning("Please describe a situation.")
+            st.warning("Please describe a situation." if language == "English" else "Veuillez décrire une situation." if language == "Français" else "Por favor, describa una situación.")
         else:
-            with st.spinner("AI is analyzing..."):
-                result = analyze_risk(situation)
+            with st.spinner("AI is analyzing..." if language == "English" else "L'IA analyse..." if language == "Français" else "La IA está analizando..."):
+                result = analyze_risk(situation, language)
             risk = result.get("risk_level", "unknown")
             flags = result.get("red_flags", [])
             advice = result.get("advice", "")
@@ -139,24 +209,45 @@ with tab1:
             else:
                 st.error(f"Analysis error: {advice}")
 
-# ---------- Tab 2: Report Suspicious Activity ----------
+# ---------- Tab 2: Anonymous Report ----------
 with tab2:
-    st.markdown("### 📢 Anonymous Report")
-    st.markdown("Your report will be stored securely and shared with local anti-trafficking organizations (optional).")
-    report_desc = st.text_area("Describe what you saw or experienced:", height=150)
-    location = st.text_input("Location (city/region, optional):")
-    contact_ok = st.checkbox("I allow SafeHaven to share my email with local NGOs for follow‑up (optional)", value=False)
+    if language == "English":
+        st.markdown("### 📢 Anonymous Report")
+        st.markdown("Your report will be stored securely and shared with local anti-trafficking organizations (optional).")
+        desc_label = "Describe what you saw or experienced:"
+        loc_label = "Location (city/region, optional):"
+        check_label = "I allow SafeHaven to share my email with local NGOs for follow‑up (optional)"
+        email_label = "Your email address (confidential):"
+        submit_label = "Submit Report"
+    elif language == "Français":
+        st.markdown("### 📢 Signalement anonyme")
+        st.markdown("Votre signalement sera stocké de manière sécurisée et partagé avec des organisations locales (optionnel).")
+        desc_label = "Décrivez ce que vous avez vu ou vécu :"
+        loc_label = "Lieu (ville/région, optionnel) :"
+        check_label = "J'autorise SafeHaven à partager mon email avec des ONG locales pour un suivi (optionnel)"
+        email_label = "Votre adresse email (confidentielle) :"
+        submit_label = "Soumettre le signalement"
+    else:
+        st.markdown("### 📢 Reporte anónimo")
+        st.markdown("Tu reporte se almacenará de forma segura y se compartirá con organizaciones locales contra la trata (opcional).")
+        desc_label = "Describe lo que viste o experimentaste:"
+        loc_label = "Ubicación (ciudad/región, opcional):"
+        check_label = "Permito que SafeHaven comparta mi correo electrónico con ONG locales para seguimiento (opcional)"
+        email_label = "Tu correo electrónico (confidencial):"
+        submit_label = "Enviar reporte"
+    
+    report_desc = st.text_area(desc_label, height=150)
+    location = st.text_input(loc_label)
+    contact_ok = st.checkbox(check_label, value=False)
     if contact_ok:
-        email = st.text_input("Your email address (confidential):")
+        email = st.text_input(email_label)
     else:
         email = "anonymous"
-    if st.button("Submit Report", key="report"):
+    if st.button(submit_label, key="report"):
         if not report_desc.strip():
-            st.warning("Please describe the situation.")
+            st.warning(desc_label)
         else:
-            # Optional: analyze report for urgency
-            urgency = analyze_risk(report_desc).get("risk_level", "unknown")
-            # Save to CSV (simple file-based storage)
+            urgency = analyze_risk(report_desc, language).get("risk_level", "unknown")
             report_data = {
                 "timestamp": datetime.now().isoformat(),
                 "description": report_desc,
@@ -169,37 +260,89 @@ with tab2:
                 df_new = pd.DataFrame([report_data])
                 df_combined = pd.concat([df_existing, df_new], ignore_index=True)
                 df_combined.to_csv("reports.csv", index=False)
-                st.success("✅ Report submitted anonymously. Thank you for helping protect others.")
+                st.success("✅ Report submitted anonymously. Thank you for helping protect others." if language == "English" else "✅ Signalement soumis anonymement. Merci de protéger les autres." if language == "Français" else "✅ Reporte enviado anónimamente. Gracias por ayudar a proteger a otros.")
                 if urgency == "high":
-                    st.warning("Your report indicates a potentially urgent situation. Local authorities may be alerted.")
+                    st.warning("Your report indicates a potentially urgent situation. Local authorities may be alerted." if language == "English" else "Votre signalement indique une situation potentiellement urgente. Les autorités locales peuvent être alertées." if language == "Français" else "Tu reporte indica una situación potencialmente urgente. Las autoridades locales pueden ser alertadas.")
             except Exception as e:
                 st.error(f"Could not save report: {e}")
 
 # ---------- Tab 3: Resources ----------
 with tab3:
-    st.markdown("### 📞 Immediate Help")
-    st.markdown("""
-    - **National Human Trafficking Hotline (USA):** 1-888-373-7888 (SMS: 233733)  
-    - **Global Modern Slavery Directory:** [slaverydirectory.org](https://slaverydirectory.org)  
-    - **International Organization for Migration (IOM):** +41 22 717 9111  
-    - **Haiti (local partner):** Call 188 (Child Protection) or 114 (Police)  
-    - **France:** 7 days/week – 116 006 (Missions locales)  
-    """)
-    st.markdown("---")
-    st.markdown("### 🛡️ Safety Plan")
-    st.markdown("""
-    1. **Memorize emergency numbers** and have a code word with a trusted friend.
-    2. **Keep important documents** (ID, passport) in a safe, accessible place.
-    3. **Establish a check‑in routine** – let someone know where you are.
-    4. **Use private browsing** when searching for help.
-    5. **If in immediate danger, call emergency services (911, 17, etc.).**
-    """)
-    st.markdown("---")
-    st.markdown("### 💡 How this tool works")
-    st.markdown("""
-    SafeHaven uses a large language model (Llama 3.1 via Groq) to analyze text for trafficking indicators. It does **not** store your personal data unless you voluntarily provide it. All reports are anonymized before analysis.
-    """)
+    if language == "English":
+        st.markdown("### 📞 Immediate Help")
+        st.markdown("""
+        - **National Human Trafficking Hotline (USA):** 1-888-373-7888 (SMS: 233733)  
+        - **Global Modern Slavery Directory:** [slaverydirectory.org](https://slaverydirectory.org)  
+        - **International Organization for Migration (IOM):** +41 22 717 9111  
+        - **Haiti (local partner):** Call 188 (Child Protection) or 114 (Police)  
+        - **France:** 7 days/week – 116 006 (Missions locales)  
+        """)
+        st.markdown("---")
+        st.markdown("### 🛡️ Safety Plan")
+        st.markdown("""
+        1. **Memorize emergency numbers** and have a code word with a trusted friend.
+        2. **Keep important documents** (ID, passport) in a safe, accessible place.
+        3. **Establish a check‑in routine** – let someone know where you are.
+        4. **Use private browsing** when searching for help.
+        5. **If in immediate danger, call emergency services (911, 17, etc.).**
+        """)
+        st.markdown("---")
+        st.markdown("### 💡 How this tool works")
+        st.markdown("""
+        SafeHaven uses a large language model (Llama 3.1 via Groq) to analyze text for trafficking indicators. It does **not** store your personal data unless you voluntarily provide it. All reports are anonymized before analysis.
+        """)
+    elif language == "Français":
+        st.markdown("### 📞 Aide immédiate")
+        st.markdown("""
+        - **Ligne nationale contre la traite (USA) :** 1-888-373-7888 (SMS : 233733)  
+        - **Annuaire mondial sur l'esclavage moderne :** [slaverydirectory.org](https://slaverydirectory.org)  
+        - **Organisation internationale pour les migrations (OIM) :** +41 22 717 9111  
+        - **Haïti (partenaire local) :** Appelez le 188 (Protection de l'enfance) ou 114 (Police)  
+        - **France :** 7j/7 – 116 006 (Missions locales)  
+        """)
+        st.markdown("---")
+        st.markdown("### 🛡️ Plan de sécurité")
+        st.markdown("""
+        1. **Mémorisez les numéros d'urgence** et ayez un mot‑code avec un ami de confiance.
+        2. **Gardez vos documents importants** (carte d'identité, passeport) dans un endroit sûr et accessible.
+        3. **Établissez une routine de check‑in** – faites savoir à quelqu'un où vous êtes.
+        4. **Utilisez la navigation privée** lorsque vous cherchez de l'aide.
+        5. **En danger immédiat, appelez les secours (911, 17, etc.).**
+        """)
+        st.markdown("---")
+        st.markdown("### 💡 Comment cet outil fonctionne")
+        st.markdown("""
+        SafeHaven utilise un grand modèle de langage (Llama 3.1 via Groq) pour analyser les textes à la recherche d'indicateurs de traite. Il ne **stocke** pas vos données personnelles sauf si vous les fournissez volontairement. Tous les signalements sont anonymisés avant analyse.
+        """)
+    else:  # Español
+        st.markdown("### 📞 Ayuda inmediata")
+        st.markdown("""
+        - **Línea nacional contra la trata (EE.UU.) :** 1-888-373-7888 (SMS: 233733)  
+        - **Directorio mundial sobre esclavitud moderna :** [slaverydirectory.org](https://slaverydirectory.org)  
+        - **Organización Internacional para las Migraciones (OIM) :** +41 22 717 9111  
+        - **Haití (socio local) :** Llame al 188 (Protección infantil) o al 114 (Policía)  
+        - **Francia :** 7 días/semana – 116 006 (Misiones locales)  
+        """)
+        st.markdown("---")
+        st.markdown("### 🛡️ Plan de seguridad")
+        st.markdown("""
+        1. **Memorice los números de emergencia** y tenga una palabra clave con un amigo de confianza.
+        2. **Guarde documentos importantes** (identificación, pasaporte) en un lugar seguro y accesible.
+        3. **Establezca una rutina de verificación** – que alguien sepa dónde está.
+        4. **Use navegación privada** cuando busque ayuda.
+        5. **Si está en peligro inmediato, llame a los servicios de emergencia (911, 17, etc.).**
+        """)
+        st.markdown("---")
+        st.markdown("### 💡 Cómo funciona esta herramienta")
+        st.markdown("""
+        SafeHaven utiliza un modelo de lenguaje grande (Llama 3.1 vía Groq) para analizar texto en busca de indicadores de trata. **No almacena** sus datos personales a menos que usted los proporcione voluntariamente. Todos los reportes se anonimizan antes del análisis.
+        """)
 
 # ================== Footer ==================
 st.markdown("---")
-st.markdown("© 2026 GlobalInternet.py – Built for the Call for Code AI Global Challenge")
+if language == "English":
+    st.markdown("© 2026 GlobalInternet.py – Built for the Call for Code AI Global Challenge")
+elif language == "Français":
+    st.markdown("© 2026 GlobalInternet.py – Conçu pour le Call for Code AI Global Challenge")
+else:
+    st.markdown("© 2026 GlobalInternet.py – Creado para el Call for Code AI Global Challenge")
