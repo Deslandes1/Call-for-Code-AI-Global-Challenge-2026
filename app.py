@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================== Custom CSS ==================
+# ================== Custom CSS (with strong white language select) ==================
 st.markdown("""
 <style>
     .stApp {
@@ -23,6 +23,34 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1f2a48 0%, #0a192f 100%);
         border-right: 2px solid #e94560;
+    }
+    /* Make sidebar text white */
+    [data-testid="stSidebar"] .stMarkdown, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stCaption {
+        color: #ffffff !important;
+    }
+    /* Language selectbox: label and selected value */
+    [data-testid="stSidebar"] .stSelectbox label {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        font-size: 1rem !important;
+    }
+    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] span {
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }
+    /* Dropdown menu background and options */
+    div[data-baseweb="select"] ul {
+        background-color: #1f2a48 !important;
+    }
+    div[data-baseweb="select"] ul li {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        background-color: #1f2a48 !important;
+    }
+    div[data-baseweb="select"] ul li:hover {
+        background-color: #e94560 !important;
     }
     h1, h2, h3 {
         color: #ffd966 !important;
@@ -70,7 +98,7 @@ with st.sidebar:
     st.markdown("**SafeHaven – AI Anti-Trafficking Tool**")
     st.markdown("---")
     
-    # Language Selection
+    # Language Selection (now with bold white text via CSS)
     language = st.selectbox("🌐 Language / Idioma / Langue", ["English", "Français", "Español"])
     
     # Global Security Shield (visible API key)
