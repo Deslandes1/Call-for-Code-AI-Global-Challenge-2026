@@ -109,6 +109,16 @@ with st.sidebar:
     st.markdown("📞 (509) 4738 5663")
     st.markdown("✉️ deslandes78@gmail.com")
     st.markdown("---")
+    
+    # Pricing / Services
+    st.markdown("### 💰 Our Services")
+    st.markdown("""
+    - **Full source code** – $499 USD  
+    - **Source + customization** – $1,499 USD  
+    - **Enterprise plan** – $2,999 USD  
+    """)
+    st.markdown("---")
+    
     if language == "English":
         st.markdown("### How to use")
         st.markdown("1. **Video Intro** – Watch the tutorial.")
@@ -191,7 +201,7 @@ Devuelve SOLO el JSON válido."""
     except Exception as e:
         return {"risk_level": "error", "red_flags": [], "advice": f"Could not analyze: {str(e)}"}
 
-# ================== TABS (Video Introduction first) ==================
+# ================== TABS ==================
 tab_titles = []
 if language == "English":
     tab_titles = ["🎬 Video Introduction", "🔍 Risk Assessment", "📢 Report", "📞 Resources"]
@@ -202,46 +212,41 @@ else:
 
 tab1, tab2, tab3, tab4 = st.tabs(tab_titles)
 
-# ---------- Tab 1: Video Introduction ----------
+# ---------- Tab 1: Video Introduction (with pre‑filled link) ----------
 with tab1:
     if language == "English":
         st.markdown("### 🎬 Watch the full introduction video")
         st.markdown("This video explains all features of SafeHaven: how to assess risk, submit anonymous reports, and access resources.")
-        st.markdown("**👉 Paste your video link below (YouTube or direct MP4) to embed the walkthrough.**")
-        video_url = st.text_input("Video URL (YouTube or direct link):", 
-                                  placeholder="https://www.youtube.com/watch?v=... or https://example.com/video.mp4")
+        video_url = st.text_input(
+            "Video URL (YouTube or direct link):",
+            value="https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=0"
+        )
         if video_url:
             st.video(video_url)
         else:
             st.info("No video link provided. You can record a screen demo and paste the link here.")
-            st.markdown("""
-            **Demo script suggestion:**
-            - Show the language selector.
-            - Paste a trafficking scenario → AI returns high risk.
-            - Submit an anonymous report.
-            - Browse resources.
-            - End with the Global Security Shield.
-            """)
     elif language == "Français":
         st.markdown("### 🎬 Regardez la vidéo d'introduction complète")
-        st.markdown("Cette vidéo explique toutes les fonctionnalités de SafeHaven : évaluation des risques, signalement anonyme, ressources.")
-        st.markdown("**👉 Collez le lien de votre vidéo ci-dessous (YouTube ou MP4 direct).**")
-        video_url = st.text_input("Lien vidéo (YouTube ou direct) :", 
-                                  placeholder="https://www.youtube.com/watch?v=... ou https://exemple.com/video.mp4")
+        st.markdown("Cette vidéo explique toutes les fonctionnalités de SafeHaven.")
+        video_url = st.text_input(
+            "Lien vidéo (YouTube ou direct) :",
+            value="https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=0"
+        )
         if video_url:
             st.video(video_url)
         else:
-            st.info("Aucune vidéo fournie. Vous pouvez enregistrer une démo et coller le lien ici.")
+            st.info("Aucune vidéo fournie.")
     else:
         st.markdown("### 🎬 Vea el video de introducción completo")
-        st.markdown("Este video explica todas las funciones de SafeHaven: evaluación de riesgos, reportes anónimos y recursos.")
-        st.markdown("**👉 Pegue el enlace de su video a continuación (YouTube o MP4 directo).**")
-        video_url = st.text_input("URL del video (YouTube o directo):", 
-                                  placeholder="https://www.youtube.com/watch?v=... o https://ejemplo.com/video.mp4")
+        st.markdown("Este video explica todas las funciones de SafeHaven.")
+        video_url = st.text_input(
+            "URL del video (YouTube o directo):",
+            value="https://www.dropbox.com/scl/fi/9m7quhz7lzu1vmb30lxby/safehaven_narrated.mp4?rlkey=vnmf48hb4hlruiwix51e124y4&st=ev5217i6&dl=0"
+        )
         if video_url:
             st.video(video_url)
         else:
-            st.info("No se proporcionó ningún video. Puede grabar una demostración y pegar el enlace aquí.")
+            st.info("No se proporcionó ningún video.")
 
 # ---------- Tab 2: Risk Assessment ----------
 with tab2:
